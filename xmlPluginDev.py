@@ -38,12 +38,13 @@ class HelperUtil():
 			for file in files:
 				if file not in ignoredFiles:
 					# strip file path so we can compare more easily
+					# full path is for example something like: '/home/user/ESBProjects/Projectname/Integrations/Mediations/Common/src/main/synapse-config/api/someapi.xml'
 					position = os.path.join(subdir, file).find("src")
-					foundFiles.append(os.path.join(subdir, file)[position:])
+					# now path will be: 'src/main/synapse-config/api/someapi.xml'
+					foundFile = os.path.join(subdir, file)[position:]
 
-		for foundFile in foundFiles:
-			if not foundFile in listOfArtifacts:
-				missingArtifacts.append(foundFile)
+					if not foundFile in listOfArtifacts:
+						missingArtifacts.append(foundFile)
 
 		return missingArtifacts
 
