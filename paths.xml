@@ -1,0 +1,8 @@
+<paths>
+	<deployment>
+		<deploymentPomPath>/home/jere/ESBProjects/Korppikotka/Integrations/Deployment/pom.xml</deploymentPomPath>
+	</deployment>
+	<artifactXmls>
+		<artifactXml>/home/jere/ESBProjects/Korppikotka/Integrations/Mediations/Common/artifact.xml</artifactXml>
+	</artifactXmls>
+</paths>
