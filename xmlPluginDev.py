@@ -1,7 +1,7 @@
 #import sublime, sublime_plugin
 import xml.etree.ElementTree as ET
 import os
-from __builtin__ import any as b_any
+from lxml import etree as ET_b
 
 class ParsePaths():
 	def getDeploymentPom(self, pathsFile):
@@ -22,7 +22,7 @@ class HelperUtil():
 		tree = ET.parse(artifactXml)
 		for elem in tree.iterfind("artifact/file"):
 			#self.artifacts.append(elem.text.split("/"))
-			self.artifacts.append(elem.text)
+			self.artifacts.append(elem.text.strip())
 		return self.artifacts
 
 	def findMissingArtifacts(self, listOfArtifacts, artifactXmlFolder):
@@ -44,6 +44,7 @@ class HelperUtil():
 					foundFile = os.path.join(subdir, file)[position:]
 
 					if not foundFile in listOfArtifacts:
+						print foundFile
 						missingArtifacts.append(foundFile)
 
 		return missingArtifacts
@@ -67,11 +68,34 @@ class EsbhelperCommand():
 
 		# if found any, add new artifacts to artifacts.xml
 		if len(self.missingArtifacts) > 0:
-			self.writeArtifacts(self.missingArtifacts, self.artifactXml)
+			#self.writeArtifacts(self.missingArtifacts, self.artifactXml)
 			self.writeDeploymentPom(self.missingArtifacts, self.deploymentPom)
 
+			#print "Following items were added: \n\r"
+			#for item in self.missingArtifacts:
+			#	print item
+
+
+		else:
+			print "No updates necessary."
+
 	def writeDeploymentPom(self, missingArtifacts, deploymentPom):
-		pass
+		for missingArtifact in missingArtifacts:
+			artifactParts = missingArtifact.split("/")
+
+			artifactType = artifactParts[3]
+			if artifactType[-1] == "s":
+				artifactType = artifactType[:-1]
+
+			artifactName = artifactParts[4]
+			projectName = "korppikotka"
+			version = "1.0.0"
+			dependencyType = "xml"
+
+			groupId = "fi.mystes.korppikotka."+artifactType
+
+			self.addDeploymentPomChildren(groupId, artifactName, version, dependencyType, artifactType)
+
 		
 	def writeArtifacts(self, missingArtifacts, artifactXml):
 		for missingArtifact in missingArtifacts:
@@ -83,10 +107,43 @@ class EsbhelperCommand():
 			version = "1.0.0"
 
 			#self.addChild('/home/jere/ESBProjects/Korppikotka/Integrations/Mediations/Common/artifact.xml', 'Endpoint', 'endpoint', 'korppikotka', '1.0.0')
-			self.addChild(artifactXml, artifactType, artifactName, projectName, version)
+			self.addArtifactXmlChild(artifactXml, artifactType, artifactName, projectName, version)
 
 
-	def addChild(self, artifactXml, artifactType, artifactName, projectName, version):
+	def addDeploymentPomChildren(self, groupId, artifactName, version, dependencyType, artifactType):
+
+			ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+
+			tree = ET.parse(self.deploymentPom)
+			root = tree.getroot()
+
+			dependenciesElement = root.find("{http://maven.apache.org/POM/4.0.0}dependencies")
+			
+			dependencyElement = ET.Element("dependency")
+
+			groupIdElement = ET.Element("groupId")
+			groupIdElement.text = "fi.mystes.korppikotka." + artifactType
+
+			artifactIdElement = ET.Element("artifactId")
+			artifactIdElement.text = artifactName
+
+			versionElement = ET.Element("version")
+			versionElement.text = version
+
+			versionElement = ET.Element("type")
+			versionElement.text = dependencyType
+
+
+			dependencyElement.append(groupIdElement)
+			dependencyElement.append(artifactIdElement)
+			dependencyElement.append(versionElement)
+
+
+			dependenciesElement.append(dependencyElement)
+
+			tree.write(self.deploymentPom)
+
+	def addArtifactXmlChild(self, artifactXml, artifactType, artifactName, projectName, version):
 
 		artifactTypeWithPossiblePlural = artifactType
 
