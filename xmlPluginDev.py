@@ -1,7 +1,6 @@
 #import sublime, sublime_plugin
 import xml.etree.ElementTree as ET
 import os
-from lxml import etree as ET_b
 
 class ParsePaths():
 	def getDeploymentPom(self, pathsFile):
@@ -68,7 +67,7 @@ class EsbhelperCommand():
 
 		# if found any, add new artifacts to artifacts.xml
 		if len(self.missingArtifacts) > 0:
-			#self.writeArtifacts(self.missingArtifacts, self.artifactXml)
+			self.writeArtifacts(self.missingArtifacts, self.artifactXml)
 			self.writeDeploymentPom(self.missingArtifacts, self.deploymentPom)
 
 			#print "Following items were added: \n\r"
@@ -83,9 +82,7 @@ class EsbhelperCommand():
 		for missingArtifact in missingArtifacts:
 			artifactParts = missingArtifact.split("/")
 
-			artifactType = artifactParts[3]
-			if artifactType[-1] == "s":
-				artifactType = artifactType[:-1]
+			artifactType = self.getRidOfPlural(artifactParts[3])
 
 			artifactName = artifactParts[4]
 			projectName = "korppikotka"
@@ -94,7 +91,7 @@ class EsbhelperCommand():
 
 			groupId = "fi.mystes.korppikotka."+artifactType
 
-			self.addDeploymentPomChildren(groupId, artifactName, version, dependencyType, artifactType)
+			self.addDeploymentPomChildren(groupId, artifactName, version, dependencyType, artifactType, projectName)
 
 		
 	def writeArtifacts(self, missingArtifacts, artifactXml):
@@ -110,46 +107,69 @@ class EsbhelperCommand():
 			self.addArtifactXmlChild(artifactXml, artifactType, artifactName, projectName, version)
 
 
-	def addDeploymentPomChildren(self, groupId, artifactName, version, dependencyType, artifactType):
+	def addDeploymentPomChildren(self, groupId, artifactName, version, dependencyType, artifactType, projectName):
 
-			ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+			self.addDeploymentDependencies(groupId, artifactName, version, dependencyType, artifactType)
+			self.addDeploymentProperties(groupId, artifactName, version, dependencyType, artifactType, projectName)
 
-			tree = ET.parse(self.deploymentPom)
-			root = tree.getroot()
+	def addDeploymentProperties(self, groupId, artifactName, version, dependencyType, artifactType, projectName):
 
-			dependenciesElement = root.find("{http://maven.apache.org/POM/4.0.0}dependencies")
-			
-			dependencyElement = ET.Element("dependency")
+		ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
 
-			groupIdElement = ET.Element("groupId")
-			groupIdElement.text = "fi.mystes.korppikotka." + artifactType
+		tree = ET.parse(self.deploymentPom)
+		root = tree.getroot()
 
-			artifactIdElement = ET.Element("artifactId")
-			artifactIdElement.text = artifactName
+		for child_or_root in root:
+			if child_or_root.tag == "{http://maven.apache.org/POM/4.0.0}properties":
+				propertiesElement = child_or_root
 
-			versionElement = ET.Element("version")
-			versionElement.text = version
+		propertyElement = ET.Element("fi.mystes." + projectName + "." + artifactType + "_._" + artifactName)
+		propertyElement.text = "capp/EnterpriseServiceBus"
 
-			versionElement = ET.Element("type")
-			versionElement.text = dependencyType
+		propertiesElement.append(propertyElement)
+
+		tree.write(self.deploymentPom)
+
+		
+
+	def addDeploymentDependencies(self, groupId, artifactName, version, dependencyType, artifactType):
+
+		ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+
+		tree = ET.parse(self.deploymentPom)
+		root = tree.getroot()
+
+		dependenciesElement = root.find("{http://maven.apache.org/POM/4.0.0}dependencies")
+		
+		dependencyElement = ET.Element("dependency")
+
+		groupIdElement = ET.Element("groupId")
+		groupIdElement.text = "fi.mystes.korppikotka." + artifactType
+
+		artifactIdElement = ET.Element("artifactId")
+		artifactIdElement.text = artifactName
+
+		versionElement = ET.Element("version")
+		versionElement.text = version
+
+		versionElement = ET.Element("type")
+		versionElement.text = dependencyType
 
 
-			dependencyElement.append(groupIdElement)
-			dependencyElement.append(artifactIdElement)
-			dependencyElement.append(versionElement)
+		dependencyElement.append(groupIdElement)
+		dependencyElement.append(artifactIdElement)
+		dependencyElement.append(versionElement)
 
+		dependenciesElement.append(dependencyElement)
 
-			dependenciesElement.append(dependencyElement)
+		tree.write(self.deploymentPom)
 
-			tree.write(self.deploymentPom)
 
 	def addArtifactXmlChild(self, artifactXml, artifactType, artifactName, projectName, version):
 
 		artifactTypeWithPossiblePlural = artifactType
 
-		# get rid of plural
-		if artifactType[-1] == "s":
-			artifactType = artifactType[:-1]
+		artifactType = self.getRidOfPlural(artifactType)
 
 		groupId = "fi.mystes." + projectName + "." + artifactType
 		artifactType = "synapse/" + artifactType
@@ -164,5 +184,12 @@ class EsbhelperCommand():
 		root.append(artifactElement)
 		artifactElement.append(fileElement)
 		tree.write(artifactXml)
+
+	def getRidOfPlural(self, artifactType):
+		# get rid of plural
+		if artifactType[-1] == "s":
+			artifactType = artifactType[:-1]
+
+		return artifactType
 
 EsbhelperCommand().run()

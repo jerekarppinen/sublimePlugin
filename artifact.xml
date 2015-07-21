@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifacts>
+    <artifact groupId="fi.mystes.project.sequence" name="MySequence" serverRole="EnterpriseServiceBus" type="synapse/sequence" version="1.0.0">
+        <file>src/main/synapse-config/sequences/MySequence.xml</file>
+    </artifact>
+    <artifact groupId="fi.mystes.project.endpoint" name="MyEndpoint" serverRole="EnterpriseServiceBus" type="synapse/endpoint" version="1.0.0">
+        <file>src/main/synapse-config/endpoints/MyEndpoint.xml</file>
+    </artifact>
+    <artifact groupId="fi.mystes.project.api" name="MyApi" serverRole="EnterpriseServiceBus" type="synapse/api" version="1.0.0">
+        <file>src/main/synapse-config/api/MyApi.xml</file>
+    </artifact>
+    <artifact groupId="fi.mystes.project.proxy-service" name="MyProxy" serverRole="EnterpriseServiceBus" type="synapse/proxy-service" version="1.0.0">
+        <file>src/main/synapse-config/proxy-services/MyProxy.xml</file>
+    </artifact>
+    <artifact groupId="fi.mystes.project.task" name="MyTask" serverRole="EnterpriseServiceBus" type="synapse/task" version="1.0.0">
+        <file>src/main/synapse-config/tasks/MyTask.xml</file>
+    </artifact>
+</artifacts>
