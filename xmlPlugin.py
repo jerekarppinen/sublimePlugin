@@ -15,6 +15,7 @@ class EsbAddArtifactsCommand():
 		# get the folder where artifact.xml resides
 		# drop last 12 letters for 'artifact.xml'
 		self.artifactXmlFolder = self.artifactXmlPath[:-12]
+		print self.artifactXmlFolder
 
 		# get list of artifacts from artifacts.xml
 		self.listOfArtifacts = HelperUtil().getListOfArtifactsFromArtifactsXml(self.artifactXmlPath)
@@ -43,8 +44,8 @@ class HelperUtil():
 		self.artifacts = []
 		tree = ET.parse(artifactXmlPath)
 		for elem in tree.iterfind("artifact/file"):
+			#print elem.text.strip()
 			self.artifacts.append(elem.text.strip())
-		print self.artifacts
 		return self.artifacts
 
 
@@ -55,7 +56,6 @@ class HelperUtil():
 		for dependency in allDependencies:
 			artifactId = dependency.find("{http://maven.apache.org/POM/4.0.0}artifactId")
 			dependencies.append(artifactId.text)
-		print dependencies
 		return dependencies
 
 	def findMissingArtifacts(self, listOfArtifacts, artifactXmlFolder):
@@ -77,9 +77,9 @@ class HelperUtil():
 						foundFile = os.path.join(subdir, file)[position:]
 
 						if not foundFile in listOfArtifacts:
-							print foundFile
 							missingArtifacts.append(foundFile)
 
+			print missingArtifacts
 			return missingArtifacts
 
 

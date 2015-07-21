@@ -9,10 +9,12 @@
     <artifact groupId="fi.mystes.project.api" name="MyApi" serverRole="EnterpriseServiceBus" type="synapse/api" version="1.0.0">
         <file>src/main/synapse-config/api/MyApi.xml</file>
     </artifact>
+    <!--
     <artifact groupId="fi.mystes.project.proxy-service" name="MyProxy" serverRole="EnterpriseServiceBus" type="synapse/proxy-service" version="1.0.0">
         <file>src/main/synapse-config/proxy-services/MyProxy.xml</file>
     </artifact>
     <artifact groupId="fi.mystes.project.task" name="MyTask" serverRole="EnterpriseServiceBus" type="synapse/task" version="1.0.0">
         <file>src/main/synapse-config/tasks/MyTask.xml</file>
     </artifact>
+    -->
 </artifacts>
