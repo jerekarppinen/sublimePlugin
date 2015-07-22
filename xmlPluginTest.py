@@ -82,8 +82,11 @@ def test_getProjectNameFromDeploymentPom():
 def test_getVersionFromDeploymentPom():
 	assert HelperUtil().getVersionFromDeploymentPom(TESTFOLDERS_PATH + "deployment/pom.xml") == "1.0.0"
 
-def test_artifactXmlWrite():
-	assert WriteXmlFiles().writeArtifacts(LIST_OF_2_MISSING_ARTIFACTS, ARTIFACT_XML_MISSING_TWO_ARTIFACTS_ABSOLUTE_PATH) == True
+def test_dontFindAnyMissingDependenciesUnderSynapseConfigWhichShouldBeInPomDependencies():
+	assert HelperUtil().findMissingDependencies(LIST_OF_DEPENDENCIES, TESTFOLDERS_PATH) == []
 
-def test_deploymentDependenciesWrite():
-	assert WriteXmlFiles().writeDependencies(LIST_OF_2_MISSING_DEPENDENCIES, TESTFOLDERS_PATH + "deployment/pom.xml", "fi.company.project" , "1.0.0") == ""
+# def test_artifactXmlWrite():
+# 	assert WriteXmlFiles().writeArtifacts(LIST_OF_2_MISSING_ARTIFACTS, ARTIFACT_XML_MISSING_TWO_ARTIFACTS_ABSOLUTE_PATH) == True
+
+# def test_deploymentDependenciesWrite():
+# 	assert WriteXmlFiles().writeDependencies(LIST_OF_2_MISSING_DEPENDENCIES, TESTFOLDERS_PATH + "deployment/pom.xml", "fi.company.project" , "1.0.0") == ""
