@@ -20,7 +20,6 @@ class HelperUtil():
 		self.artifacts = []
 		tree = ET.parse(artifactXml)
 		for elem in tree.iterfind("artifact/file"):
-			#self.artifacts.append(elem.text.split("/"))
 			self.artifacts.append(elem.text.strip())
 		return self.artifacts
 
@@ -31,6 +30,7 @@ class HelperUtil():
 
 		# concat our synapse-config folder
 		self.synapseConfigFolder = artifactXmlFolder + listOfArtifacts[0][:23]
+		print self.synapseConfigFolder
 
 		# iterate folders with assumed artifacts
 		for subdir, dirs, files in os.walk(self.synapseConfigFolder):

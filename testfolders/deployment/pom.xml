@@ -1,32 +1,41 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>Project-Integrations</artifactId>
+        <groupId>fi.company.project</groupId>
+        <version>1.0.0</version>
+    </parent>
     <dependencies>
         <dependency>
             <groupId>fi.company.project.sequence</groupId>
             <artifactId>MySequence.xml</artifactId>
             <type>xml</type>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>fi.company.project.endpoint</groupId>
             <artifactId>MyEndpoint.xml</artifactId>
             <type>xml</type>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>fi.company.project.api</groupId>
             <artifactId>MyApi.xml</artifactId>
             <type>xml</type>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>fi.company.project.proxy-service</groupId>
             <artifactId>MyProxy.xml</artifactId>
             <type>xml</type>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>fi.company.project.task</groupId>
             <artifactId>MyTask.xml</artifactId>
             <type>xml</type>
+            <version>1.0.0</version>
         </dependency>
-    </dependencies>
+    <dependency><groupId>fi.company.project.proxy-service</groupId><artifactId>MyProxy</artifactId><version>1.0.0</version><type>xml</type></dependency><dependency><groupId>fi.company.project.task</groupId><artifactId>MyTask</artifactId><version>1.0.0</version><type>xml</type></dependency></dependencies>
     <properties>
         <fi.company.project.sequence_._MySequence.xml>capp/EnterpriseServiceBus</fi.company.project.sequence_._MySequence.xml>
         <fi.company.project.endpoint_._MyEndpoint.xml>capp/EnterpriseServiceBus</fi.company.project.endpoint_._MyEndpoint.xml>
