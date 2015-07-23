@@ -1,8 +1,10 @@
 <paths>
 	<deployment>
 		<deploymentPomPath>/home/jere/ESBProjects/Korppikotka/Integrations/Deployment/pom.xml</deploymentPomPath>
+		<!--<deploymentPomPath>/home/jere/Projects/SublimePlugin/testfolders/deployment/pom.xml</deploymentPomPath>-->
 	</deployment>
 	<artifactXmls>
 		<artifactXml>/home/jere/ESBProjects/Korppikotka/Integrations/Mediations/Common/artifact.xml</artifactXml>
+		<!--<artifactXml>/home/jere/Projects/SublimePlugin/testfolders/artifact.xml</artifactXml>-->
 	</artifactXmls>
 </paths>

@@ -4,82 +4,88 @@ import os
 import re
 
 class EsbAddArtifactsCommand():
-	def run(self):
+		def run(self):
 
-		self.config = "paths.xml"
+			self.config = "paths.xml"
 
-		self.parsePaths = ParsePaths()
+			self.deploymentPomPath = ParsePaths().getDeploymentPomPath("paths.xml")
+			self.artifactXmlPath = ParsePaths().getArtifactXmlPath("paths.xml")
 
-		self.deploymentPomPath = self.parsePaths.getDeploymentPomPath("paths.xml")
-		self.artifactXmlPath = self.parsePaths.getArtifactXmlPath("paths.xml")
+			# get the folder where artifact.xml resides
+			# drop last 12 letters for 'artifact.xml'
+			self.artifactXmlFolder = self.artifactXmlPath[:-12]
 
-		# get the folder where artifact.xml resides
-		# drop last 12 letters for 'artifact.xml'
-		self.artifactXmlFolder = self.artifactXmlPath[:-12]
+			self.projectName = HelperUtil().getProjectNameFromDeploymentPom(self.deploymentPomPath)
 
-		self.projectName = HelperUtil().getProjectNameFromDeploymentPom(self.deploymentPomPath)
+			self.version = HelperUtil().getVersionFromDeploymentPom(self.deploymentPomPath)
 
-		self.version = HelperUtil().getVersionFromDeploymentPom(self.deploymentPomPath)
+			# get list of artifacts from artifacts.xml
+			self.listOfArtifacts = HelperUtil().getListOfArtifactsFromArtifactsXml(self.artifactXmlPath)
 
-		# get list of artifacts from artifacts.xml
-		self.listOfArtifacts = HelperUtil().getListOfArtifactsFromArtifactsXml(self.artifactXmlPath)
+			# get list of dependencies from pom.xml
+			self.listOfDependencies = HelperUtil().getListOfDependenciesFromDeploymentPom(self.deploymentPomPath)
 
-		# get list of dependencies from pom.xml
-		self.listOfDependencies = HelperUtil().getListOfDependenciesFromDeploymentPom(self.deploymentPomPath)
+			# get list of properties from pom.xml
+			self.listOfProperties = HelperUtil().getListOfPropertiesFromDeploymentPom(self.deploymentPomPath)
 
-		# figure out if there are some artifacts created but not added to artifacts.xml
-		self.missingArtifacts = HelperUtil().findMissingArtifacts(self.listOfArtifacts, self.artifactXmlFolder)
+			# figure out if there are some artifacts created but not added to artifacts.xml
+			self.missingArtifacts = HelperUtil().findMissingArtifacts(self.listOfArtifacts, self.artifactXmlFolder)
 
-		# figure out if there are some artifacts created but not added to pom.xml
-		self.missingDependencies = HelperUtil().findMissingDependencies(self.listOfDependencies, self.artifactXmlFolder)
+			# figure out if there are some artifacts created but not added to pom.xml
+			self.missingDependencies = HelperUtil().findMissingDependencies(self.listOfDependencies, self.artifactXmlFolder)
 
-		# if found any, add new artifacts to artifacts.xml
-		print len(self.missingArtifacts)
-		if len(self.missingArtifacts) > 0:
-			WriteXmlFiles().writeArtifacts(self.missingArtifacts, self.artifactXmlPath, self.version)
-		else:
-			print "No new artifacts."
+			# and finally the same for properties
+			self.missingProperties = HelperUtil().findMissingProperties(self.listOfProperties, self.artifactXmlFolder)
 
-		# and new dependencies to pom.xml
-		print len(self.missingDependencies)
-		if len(self.missingDependencies) > 0:
-			WriteXmlFiles().writeDependencies(self.missingDependencies, self.deploymentPomPath, self.projectName, self.version)
-		else:
-			print "No new dependencies"
+			# if found any, add new artifacts to artifacts.xml
+			print "New artifacts:", len(self.missingArtifacts), self.missingArtifacts
+			if len(self.missingArtifacts) > 0:
+				WriteXmlFiles().writeArtifacts(self.missingArtifacts, self.artifactXmlPath, self.version)
+
+			#and new dependencies to pom.xml
+			print "New dependencies:", len(self.missingDependencies), self.missingDependencies
+			if len(self.missingDependencies) > 0:
+				WriteXmlFiles().writeDependencies(self.missingDependencies, self.deploymentPomPath, self.projectName, self.version)
+
+			#and new properties to pom.xml
+			print "New properties:", len(self.missingProperties), self.missingProperties
+			if len(self.missingProperties) > 0:
+				WriteXmlFiles().writeProperties(self.missingProperties, self.deploymentPomPath, self.projectName, self.version)
 
 
 class WriteXmlFiles():
 	def writeArtifacts(self, missingArtifacts, artifactXmlPath, version):
 
 		for missingArtifact in missingArtifacts:
+			artifactParts = missingArtifact.split("/")
 
-					artifactParts = missingArtifact.split("/")
+			artifactType = artifactParts[3]
+			artifactName = artifactParts[4]
 
-					artifactType = artifactParts[3]
-					artifactName = artifactParts[4]
+			projectName = "korppikotka"
 
-					projectName = "korppikotka"
+			artifactTypeWithPossiblePlural = artifactType
 
-					artifactTypeWithPossiblePlural = artifactType
+			artifactType = HelperUtil().getRidOfPlural(artifactType)
 
-					artifactType = HelperUtil().getRidOfPlural(artifactType)
+			groupId = "fi.mystes." + projectName + "." + artifactType
+			artifactType = "synapse/" + artifactType
+			
+			tree = ET.parse(artifactXmlPath)
+			root = tree.getroot()
+			artifactElement = ET.Element("artifact", groupId=groupId, name=artifactName[:-4], serverRole="EnterpriseServiceBus", type=artifactType, version=version)
 
-					groupId = "fi.mystes." + projectName + "." + artifactType
-					artifactType = "synapse/" + artifactType
-					
-					tree = ET.parse(artifactXmlPath)
-					root = tree.getroot()
-					artifactElement = ET.Element("artifact", groupId=groupId, name=artifactName, serverRole="EnterpriseServiceBus", type=artifactType, version=version)
+			fileElement = ET.Element("file")
+			fileElement.text = "src/main/synapse-config/" + artifactTypeWithPossiblePlural + "/" + artifactName
 
-					fileElement = ET.Element("file")
-					fileElement.text = "src/main/synapse-config/" + artifactTypeWithPossiblePlural + "/" + artifactName
+			root.append(artifactElement)
+			artifactElement.append(fileElement)
 
-					root.append(artifactElement)
-					artifactElement.append(fileElement)
-
-					tree.write(artifactXmlPath)
+		tree.write(artifactXmlPath)
 
 	def writeDependencies(self, missingDependencies, deploymentPomPath, projectName, version):
+
+		ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
 
 		for missingDependency in missingDependencies:
 			# a little hack to extract artifact type from the file path
@@ -96,8 +102,6 @@ class WriteXmlFiles():
 			artifactName = missingDependency[positionOfLastForwardSlash+1:positionOfLastPoint]
 			
 			simpleType = "xml"
-
-			ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
 
 			tree = ET.parse(deploymentPomPath)
 			root = tree.getroot()
@@ -118,7 +122,6 @@ class WriteXmlFiles():
 			typeElement = ET.Element("type")
 			typeElement.text = simpleType
 
-
 			dependencyElement.append(groupIdElement)
 			dependencyElement.append(artifactIdElement)
 			dependencyElement.append(versionElement)
@@ -126,9 +129,39 @@ class WriteXmlFiles():
 
 			dependenciesElement.append(dependencyElement)
 
-			tree.write(deploymentPomPath)
+		tree.write(deploymentPomPath)
 
+	def writeProperties(self, missingProperties, deploymentPomPath, projectName, version):
 
+		ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+
+		tree = ET.parse(deploymentPomPath)
+		root = tree.getroot()
+
+		for missingProperty in missingProperties:
+
+			# a little hack to extract artifact type from the file path
+			result = re.search('src/main/synapse-config/(.*)/', missingProperty)
+			artifactType = result.group(1)
+			artifactTypeWithPossiblePlural = artifactType
+			artifactType = HelperUtil().getRidOfPlural(artifactType)
+
+			groupId = projectName + "." + artifactType + "_._"
+
+			positionOfLastForwardSlash = missingProperty.rfind("/")
+			positionOfLastPoint = missingProperty.rfind(".")
+
+			artifactName = missingProperty[positionOfLastForwardSlash+1:positionOfLastPoint]
+
+			propertyElement = ET.Element(groupId+artifactName)
+
+			propertyElement.text = "capp/EnterpriseServiceBus"
+
+			propertiesElement = root.find("{http://maven.apache.org/POM/4.0.0}properties")
+
+			propertiesElement.append(propertyElement)
+
+		tree.write(deploymentPomPath)
 
 class ParsePaths():
 	def getDeploymentPomPath(self, pathsFile):
@@ -159,7 +192,20 @@ class HelperUtil():
 		for dependency in allDependencies:
 			artifactId = dependency.find("{http://maven.apache.org/POM/4.0.0}artifactId")
 			dependencies.append(artifactId.text)
+		#print dependencies
 		return dependencies
+
+	def getListOfPropertiesFromDeploymentPom(self, deploymentPomPath):
+		properties = {}
+		tree = ET.parse(deploymentPomPath)
+		allProperties = tree.findall("{http://maven.apache.org/POM/4.0.0}properties/*")
+		for foundProperty in allProperties:
+			tagNameStrippedNameSpace = foundProperty.tag[35:]
+			delimiterPosition =  tagNameStrippedNameSpace.find("_._")
+			properties[tagNameStrippedNameSpace[delimiterPosition+3:]] = tagNameStrippedNameSpace
+
+		#print properties
+		return properties
 
 	def getProjectNameFromDeploymentPom(self, deploymentPomPath):
 		tree = ET.parse(deploymentPomPath)
@@ -196,6 +242,7 @@ class HelperUtil():
 
 						if not foundFile in listOfArtifacts:
 							missingArtifacts.append(foundFile)
+
 			return missingArtifacts
 
 	# takes list of dependencies found from pom.xml and compares it to actual files
@@ -246,10 +293,55 @@ class HelperUtil():
 
 						foundFileWithFullPath = os.path.join(subdir, file)[position:]
 
-						if not foundFile in listOfDependencies:
+						# -4 because of .xml
+						if not foundFile[:-4] in listOfDependencies:
+							#print foundFile[:-4], foundFileWithFullPath, listOfDependencies
 							missingDependencies.append(foundFileWithFullPath)
 
+			#print missingDependencies
 			return missingDependencies
+
+	def findMissingProperties(self, listOfProperties, artifactXmlFolder):
+		ignoredFiles = ["synapse.xml"]
+		foundFiles = []
+		missingProperties = []
+
+		# concat our synapse-config folder
+		self.synapseConfigFolder = artifactXmlFolder + "src/main/synapse-config"
+
+		for subdir, dirs, files in os.walk(self.synapseConfigFolder):
+			for file in files:
+				if not file in ignoredFiles:
+					if os.path.join(subdir, file).find("api") > -1:
+						position = os.path.join(subdir, file).find("api")
+						# now path will be: 'MyApi.xml'
+						# position + 4 because want to exclude api/							
+						foundFile = os.path.join(subdir, file)[position+4:]
+
+					elif os.path.join(subdir, file).find("proxy-services") > -1:
+						position = os.path.join(subdir, file).find("proxy-services")
+						foundFile = os.path.join(subdir, file)[position+15:]
+
+					elif os.path.join(subdir, file).find("sequences") > -1:
+						position = os.path.join(subdir, file).find("sequences")
+						foundFile = os.path.join(subdir, file)[position+10:]
+
+					elif os.path.join(subdir, file).find("endpoints") > -1:
+						position = os.path.join(subdir, file).find("endpoints")
+						foundFile = os.path.join(subdir, file)[position+10:]
+
+					elif os.path.join(subdir, file).find("tasks") > -1:
+						position = os.path.join(subdir, file).find("tasks")
+						foundFile = os.path.join(subdir, file)[position+6:]
+
+					position = os.path.join(subdir, file).find("src")
+
+					foundFileWithFullPath = os.path.join(subdir, file)[position:]
+
+					if listOfProperties.get(file[:-4]) == None:
+						missingProperties.append(foundFileWithFullPath)
+
+		return missingProperties
 
 	def getRidOfPlural(self, artifactType):
 		# get rid of plural
@@ -257,6 +349,5 @@ class HelperUtil():
 			artifactType = artifactType[:-1]
 
 		return artifactType
-
 
 EsbAddArtifactsCommand().run()
