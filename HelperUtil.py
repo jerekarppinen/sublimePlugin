@@ -39,7 +39,7 @@ class HelperUtil():
 			projectName = element.find("{http://maven.apache.org/POM/4.0.0}groupId")
 		return projectName.text
 
-	def getVersionFromDeploymentPom(self, deploymentPomPath):
+	def getProjectVersionFromDeploymentPom(self, deploymentPomPath):
 		tree = ET.parse(deploymentPomPath)
 		parent = tree.findall("{http://maven.apache.org/POM/4.0.0}parent")
 		for element in parent:
