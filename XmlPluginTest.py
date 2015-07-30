@@ -1,112 +1,150 @@
-from nose.tools import *
-from xmlPlugin import *
 import os
-import filecmp
+import shutil
+import unittest
+from lxml import etree
+import lxml.etree
+import lxml.builder
+from WriteXmlFiles import WriteXmlFiles
+from ParsePaths import ParsePaths
+from HelperUtil import HelperUtil
 
-def getAbsolutePath(RELATIVE_PATH):
-	dir = os.path.dirname(__file__)
-	return os.path.join(dir, RELATIVE_PATH)
+import ParsePaths
 
-FINALLY_EXPECTED_LIST_OF_ARTIFACTS = [
-"src/main/synapse-config/sequences/MySequence.xml",
-"src/main/synapse-config/endpoints/MyEndpoint.xml",
-"src/main/synapse-config/api/MyApi.xml",
-"src/main/synapse-config/proxy-services/MyProxy.xml",
-"src/main/synapse-config/tasks/MyTask.xml"
-]
+deploymentPomPath = "testfolders2/deployment/pom.xml"
+artifactXmlFolder = "testfolders2"
 
-LIST_OF_ARTIFACTS = [
-"src/main/synapse-config/sequences/MySequence.xml",
-"src/main/synapse-config/endpoints/MyEndpoint.xml",
-"src/main/synapse-config/api/MyApi.xml",
-"src/main/synapse-config/proxy-services/MyProxy.xml",
-"src/main/synapse-config/tasks/MyTask.xml"
-]
+class Background():
 
-LIST_OF_ARTIFACTS_2_MISSING = [
-"src/main/synapse-config/sequences/MySequence.xml",
-"src/main/synapse-config/endpoints/MyEndpoint.xml",
-"src/main/synapse-config/api/MyApi.xml"
-]
+	def createFoldersAndFiles(self):
 
-LIST_OF_DEPENDENCIES = [
-'MySequence',
-'MyEndpoint',
-'MyApi',
-'MyProxy',
-'MyTask'
-]
+		if not os.path.exists("testfolders2/deployment"):
+			os.makedirs("testfolders2/deployment")
 
-LIST_OF_PROPERTIES = {
-'MyApi': 'fi.company.project.api_._MyApi',
-'MySequence': 'fi.company.project.sequence_._MySequence',
-'MyProxy': 'fi.company.project.proxy-service_._MyProxy',
-'.company.project.task._MyTask': 'fi.company.project.task._MyTask',
-'MyEndpoint': 'fi.company.project.endpoint_._MyEndpoint'
-}
+		if not os.path.exists("testfolders2/src/main/synapse-config/api"):
+			os.makedirs("testfolders2/src/main/synapse-config/api")
+
+		if not os.path.exists("testfolders2/src/main/synapse-config/endpoints"):
+			os.makedirs("testfolders2/src/main/synapse-config/endpoints")
+
+		if not os.path.exists("testfolders2/src/main/synapse-config/proxy-services"):
+			os.makedirs("testfolders2/src/main/synapse-config/proxy-services")
+
+		if not os.path.exists("testfolders2/src/main/synapse-config/sequences"):
+			os.makedirs("testfolders2/src/main/synapse-config/sequences")
+
+		if not os.path.exists("testfolders2/src/main/synapse-config/tasks"):
+			os.makedirs("testfolders2/src/main/synapse-config/tasks")
+
+		open("testfolders2/src/main/synapse-config/api/MyApi.xml", 'a').close()
+		open("testfolders2/src/main/synapse-config/endpoints/MyEndpoint.xml", 'a').close()
+		open("testfolders2/src/main/synapse-config/proxy-services/MyProxy.xml", 'a').close()
+		open("testfolders2/src/main/synapse-config/sequences/MySequence.xml", 'a').close()
+		open("testfolders2/src/main/synapse-config/tasks/MyTask.xml", 'a').close()
+
+	def createFullPomFile(self):
+
+		projectXml = """
+		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		   <parent>
+		      <artifactId>Project-Integrations</artifactId>
+		      <groupId>fi.company.project</groupId>
+		      <version>1.0.0</version>
+		   </parent>
+		   <dependencies>
+		      <dependency>
+		         <groupId>fi.company.project.sequence</groupId>
+		         <artifactId>MySequence</artifactId>
+		         <type>xml</type>
+		         <version>1.0.0</version>
+		      </dependency>
+		      <dependency>
+		         <groupId>fi.company.project.endpoint</groupId>
+		         <artifactId>MyEndpoint</artifactId>
+		         <type>xml</type>
+		         <version>1.0.0</version>
+		      </dependency>
+		      <dependency>
+		         <groupId>fi.company.project.api</groupId>
+		         <artifactId>MyApi</artifactId>
+		         <type>xml</type>
+		         <version>1.0.0</version>
+		      </dependency>
+		      <dependency>
+		         <groupId>fi.company.project.proxy-service</groupId>
+		         <artifactId>MyProxy</artifactId>
+		         <type>xml</type>
+		         <version>1.0.0</version>
+		      </dependency>
+		      <dependency>
+		         <groupId>fi.company.project.task</groupId>
+		         <artifactId>MyTask</artifactId>
+		         <type>xml</type>
+		         <version>1.0.0</version>
+		      </dependency>
+		</dependencies>
+		   <properties>
+		      <fi.company.project.sequence_._MySequence>capp/EnterpriseServiceBus</fi.company.project.sequence_._MySequence>
+		      <fi.company.project.endpoint_._MyEndpoint>capp/EnterpriseServiceBus</fi.company.project.endpoint_._MyEndpoint>
+		      <fi.company.project.api_._MyApi>capp/EnterpriseServiceBus</fi.company.project.api_._MyApi>
+		      <fi.company.project.proxy-service_._MyProxy>capp/EnterpriseServiceBus</fi.company.project.proxy-service_._MyProxy>
+		      <fi.company.project.task._MyTask>capp/EnterpriseServiceBus</fi.company.project.task._MyTask>
+		    </properties>
+	</project>
+		"""
+
+		xml =  lxml.etree.fromstring(projectXml)
+
+		with open(deploymentPomPath, "w") as f:
+			f.write(lxml.etree.tostring(xml, pretty_print=True, xml_declaration=True, encoding="utf-8"))
+
+	def deleteFoldersAndFiles(self):
+		shutil.rmtree('testfolders2')
 
 
+class Happy_PathsXmlFileContainsCorrectFilePaths(unittest.TestCase):
 
-LIST_OF_MISSING_PROPERTIES = [
-'src/main/synapse-config/sequences/MySequence.xml',
-'src/main/synapse-config/proxy-services/MyProxy.xml'
-]
+	def test_given_PathsXmlFileExists(self):
+		self.assertTrue(os.path.isfile("paths.xml"))
 
-LIST_OF_DEPENDENCIES_2_MISSING = [
-'MySequence',
-'MyEndpoint',
-'MyApi'
-]
+	def test_then_DeploymentPomPathContainsPomXml(self):
+		tree = etree.parse("paths.xml")
+		element = tree.xpath("//paths/deployment/deploymentPomPath/text()")
+		self.assertEquals(element[0][-7:], "pom.xml")
 
-LIST_OF_2_MISSING_DEPENDENCIES = [
-"src/main/synapse-config/proxy-services/MyProxy.xml",
-"src/main/synapse-config/tasks/MyTask.xml"
-]
+	def test_and_ArtifactXmlContainsArtifactXml(self):
+		tree = etree.parse("paths.xml")
+		element = tree.xpath("//paths/artifactXmls/artifactXml/text()")
+		self.assertEquals(element[0][-12:], "artifact.xml")
 
-LIST_OF_2_MISSING_ARTIFACTS = [
-"src/main/synapse-config/proxy-services/MyProxy.xml",
-"src/main/synapse-config/tasks/MyTask.xml"
-]
+class Happy_DeploymentPomIsRead(unittest.TestCase):
 
-TESTFOLDERS_PATH = getAbsolutePath("testfolders/")
-ARTIFACT_XML_ABSOLUTE_PATH = getAbsolutePath("testfolders/artifact.xml")
-ARTIFACT_XML_MISSING_TWO_ARTIFACTS_ABSOLUTE_PATH = getAbsolutePath("testfolders/artifact_missing_two_artifacts.xml")
+	@classmethod
+	def setUpClass(cls):
+		Background().createFoldersAndFiles()
+		Background().createFullPomFile()
 
-def test_artifactXmlFileIsParsed():
-	assert ParsePaths().getArtifactXmlPath("paths.xml") == "/home/jere/Projects/SublimePlugin/testfolders/artifact.xml"
+	@classmethod
+	def tearDownClass(cls):
+		Background().deleteFoldersAndFiles()
 
-def test_deploymentXmlFileIsParsed():
-	assert ParsePaths().getDeploymentPomPath("paths.xml") == "/home/jere/Projects/SublimePlugin/testfolders/deployment/pom.xml"
+	
 
-def test_getListOfArtifactsFromArtifactsXmlThatReturnsValidList():
-	assert HelperUtil().getListOfArtifactsFromArtifactsXml(ARTIFACT_XML_ABSOLUTE_PATH).sort() == LIST_OF_ARTIFACTS.sort()
+	def test_then_projectNameIsReadFromTheFile(self):
+		self.assertEquals(HelperUtil().getProjectNameFromDeploymentPom(deploymentPomPath), "fi.company.project")
 
-def test_getListOfDependenciesFromDeploymentPom():
-	assert HelperUtil().getListOfDependenciesFromDeploymentPom(TESTFOLDERS_PATH + "deployment/pom.xml") == LIST_OF_DEPENDENCIES
+	def test_and_projectVersionIsReadFromTheFile(self):
+		self.assertEquals(HelperUtil().getProjectVersionFromDeploymentPom(deploymentPomPath), "1.0.0")
 
-def test_find2MissingArtifactsUnderSynapseConfigWhichShouldBeInArtifactXml():
-	assert HelperUtil().findMissingArtifacts(LIST_OF_ARTIFACTS_2_MISSING, TESTFOLDERS_PATH) == LIST_OF_2_MISSING_ARTIFACTS
+	def test_and_listOfDependenciesAreReadFromTheFile(self):
+		self.assertEqual(HelperUtil().getListOfDependenciesFromDeploymentPom(deploymentPomPath), ["MySequence", "MyEndpoint", "MyApi", "MyProxy", "MyTask"])
 
-def test_find2MissingDependenciesUnderSynapseConfigWhichShouldBeInPomDependencies():
-	assert HelperUtil().findMissingDependencies(LIST_OF_DEPENDENCIES_2_MISSING, TESTFOLDERS_PATH) == LIST_OF_2_MISSING_DEPENDENCIES
+	def test_and_listOfPropertiesAreReadFromTheFile(self):
+		self.assertEqual(HelperUtil().getListOfPropertiesFromDeploymentPom(deploymentPomPath), {'MyApi': 'fi.company.project.api_._MyApi', 'MySequence': 'fi.company.project.sequence_._MySequence', 'MyProxy': 'fi.company.project.proxy-service_._MyProxy', '.company.project.task._MyTask': 'fi.company.project.task._MyTask', 'MyEndpoint': 'fi.company.project.endpoint_._MyEndpoint'})
 
-def test_getProjectNameFromDeploymentPom():
-	assert HelperUtil().getProjectNameFromDeploymentPom(TESTFOLDERS_PATH + "deployment/pom.xml") == "fi.company.project"
+	def test_and_noMissingDependenciesAreFoundUnderSynapseConfigFolder(self):
+		self.assertEqual(HelperUtil().findMissingDependencies(["MySequence", "MyEndpoint", "MyApi", "MyProxy", "MyTask"], artifactXmlFolder), [])
 
-def test_getVersionFromDeploymentPom():
-	assert HelperUtil().getVersionFromDeploymentPom(TESTFOLDERS_PATH + "deployment/pom.xml") == "1.0.0"
 
-def test_dontFindAnyMissingDependenciesUnderSynapseConfigWhichShouldBeInPomDependencies():
-	assert HelperUtil().findMissingDependencies(LIST_OF_DEPENDENCIES, TESTFOLDERS_PATH) == []
-
-def test_getListOfPropertiesFromDeploymentPom():
-	assert HelperUtil().getListOfPropertiesFromDeploymentPom(TESTFOLDERS_PATH + "deployment/pom.xml") == LIST_OF_PROPERTIES
-
-# def test_artifactXmlWrite():
-# 	assert WriteXmlFiles().writeArtifacts(LIST_OF_2_MISSING_ARTIFACTS, ARTIFACT_XML_MISSING_TWO_ARTIFACTS_ABSOLUTE_PATH, "1.0.0") == True
-
-# def test_deploymentDependenciesWrite():
-# 	assert WriteXmlFiles().writeDependencies(LIST_OF_2_MISSING_DEPENDENCIES, TESTFOLDERS_PATH + "deployment/pom.xml", "fi.company.project" , "1.0.0") == "
-
-# def test_writeDeploymentProperties():
-# 	assert WriteXmlFiles().writeProperties(LIST_OF_MISSING_PROPERTIES, TESTFOLDERS_PATH + "deployment/pom.xml", "fi.company.project" , "1.0.0") == ""
+if __name__ == '__main__':
+		unittest.main()
+ 
