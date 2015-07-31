@@ -267,7 +267,8 @@ class Happy_TwoComponentsAreMissingUnderSynapseConfigAndThenAddedToDeploymentPom
 
 	@classmethod
 	def tearDownClass(cls):
-		Background().deleteFoldersAndFiles()
+		pass
+		#Background().deleteFoldersAndFiles()
 
 	def test_twoMissingComponentsAreFoundRelatedToArtifactsXml(self):
 		self.assertEquals(HelperUtil().findMissingArtifacts(['src/main/synapse-config/sequences/MySequence.xml', 'src/main/synapse-config/endpoints/MyEndpoint.xml', 'src/main/synapse-config/api/MyApi.xml'], artifactXmlFolder), ['src/main/synapse-config/proxy-services/MyProxy.xml', 'src/main/synapse-config/tasks/MyTask.xml'])
@@ -278,7 +279,13 @@ class Happy_TwoComponentsAreMissingUnderSynapseConfigAndThenAddedToDeploymentPom
 	def test_twoMissingPropertiesAreFoundRelatedToDeploymentPom(self):
 		self.assertEquals(HelperUtil().findMissingProperties({'MySequence': 'fi.company.project.sequence_._MySequence', 'MyEndpoint': 'fi.company.project.endpoint_._MyEndpoint', 'MyApi': 'fi.company.project.api_._MyApi'}, artifactXmlFolder), ['src/main/synapse-config/proxy-services/MyProxy.xml', 'src/main/synapse-config/tasks/MyTask.xml'])
 
+	def test_twoMissingComponentsAreWrittenToArtifactXml(self):
+		self.assertEquals(WriteXmlFiles().writeArtifacts(['src/main/synapse-config/proxy-services/MyProxy.xml', 'src/main/synapse-config/tasks/MyTask.xml'], arfifactXmlPath, "1.0.0"), None)
 
+	def test_assertArtifactXml(self):
+		root = ET.parse(arfifactXmlPath)
+		self.assertEquals(root, True)
+ 
 if __name__ == '__main__':
 		unittest.main()
  

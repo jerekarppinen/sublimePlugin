@@ -1,3 +1,4 @@
+from HelperUtil import HelperUtil
 import xml.etree.ElementTree as ET
 
 class WriteXmlFiles():
