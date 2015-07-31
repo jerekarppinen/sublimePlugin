@@ -3,6 +3,9 @@ import xml.etree.ElementTree as ET
 class WriteXmlFiles():
 	def writeArtifacts(self, missingArtifacts, artifactXmlPath, version):
 
+		tree = ET.parse(artifactXmlPath)
+		root = tree.getroot()
+
 		for missingArtifact in missingArtifacts:
 			artifactParts = missingArtifact.split("/")
 
@@ -18,8 +21,6 @@ class WriteXmlFiles():
 			groupId = "fi.mystes." + projectName + "." + artifactType
 			artifactType = "synapse/" + artifactType
 			
-			tree = ET.parse(artifactXmlPath)
-			root = tree.getroot()
 			artifactElement = ET.Element("artifact", groupId=groupId, name=artifactName[:-4], serverRole="EnterpriseServiceBus", type=artifactType, version=version)
 
 			fileElement = ET.Element("file")
@@ -28,11 +29,15 @@ class WriteXmlFiles():
 			root.append(artifactElement)
 			artifactElement.append(fileElement)
 
+
 		tree.write(artifactXmlPath)
 
 	def writeDependencies(self, missingDependencies, deploymentPomPath, projectName, version):
 
 		ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+
+		tree = ET.parse(deploymentPomPath)
+		root = tree.getroot()
 
 		for missingDependency in missingDependencies:
 			# a little hack to extract artifact type from the file path
@@ -49,9 +54,6 @@ class WriteXmlFiles():
 			artifactName = missingDependency[positionOfLastForwardSlash+1:positionOfLastPoint]
 			
 			simpleType = "xml"
-
-			tree = ET.parse(deploymentPomPath)
-			root = tree.getroot()
 
 			dependenciesElement = root.find("{http://maven.apache.org/POM/4.0.0}dependencies")
 			
