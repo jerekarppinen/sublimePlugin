@@ -1,10 +1,10 @@
-#import sublime, sublime_plugin
+import sublime, sublime_plugin
 import re
 from WriteXmlFiles import WriteXmlFiles
 from ParsePaths import ParsePaths
 from HelperUtil import HelperUtil
 
-class EsbAddArtifactsCommand():
+class EsbAddArtifactsCommand(sublime_plugin.TextCommand):
 		def run(self):
 
 			self.config = "paths.xml"
@@ -52,6 +52,10 @@ class EsbAddArtifactsCommand():
 			print "New properties:", len(self.missingProperties), self.missingProperties
 			if len(self.missingProperties) > 0:
 				WriteXmlFiles().writeProperties(self.missingProperties, self.deploymentPomPath, self.projectName, self.version)
+
+			self.message = self.missingArtifacts + self.missingDependencies + self.missingProperties
+
+			sublime.message_dialog("Added components: " + self.message)
 
 
 EsbAddArtifactsCommand().run()

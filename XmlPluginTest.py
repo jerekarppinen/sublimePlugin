@@ -194,7 +194,7 @@ class Background():
 		xml =  lxml.etree.fromstring(projectXml)
 
 		with open(arfifactXmlPath, "w") as f:
-			f.write(lxml.etree.tostring(xml, pretty_print=True, xml_declaration=True, encoding="utf-8"))			
+			f.write(lxml.etree.tostring(xml, pretty_print=True, xml_declaration=True, encoding="utf-8"))
 
 	def deleteFoldersAndFiles(self):
 		shutil.rmtree('testfolders2')
@@ -257,7 +257,7 @@ class Happy_ArtifactXmlIsRead(unittest.TestCase):
 	def test_artifactXmlFileContainsFiveComponents(self):
 		self.assertEquals(HelperUtil().getListOfArtifactsFromArtifactsXml(arfifactXmlPath), ['src/main/synapse-config/sequences/MySequence.xml', 'src/main/synapse-config/endpoints/MyEndpoint.xml', 'src/main/synapse-config/api/MyApi.xml', 'src/main/synapse-config/proxy-services/MyProxy.xml', 'src/main/synapse-config/tasks/MyTask.xml'])
 
-class Happy_TwoComponentsAreMissingUnderSynapseConfigAndThenAddedToDeploymentPomAndArtifactXml(unittest.TestCase):
+class Happy_TwoComponentsAreMissingUnderSynapseConfigAndThenAddedToDeploymentPomAndArtifactXml(XmlTestCase):
 
 	@classmethod
 	def setUpClass(cls):
@@ -282,9 +282,13 @@ class Happy_TwoComponentsAreMissingUnderSynapseConfigAndThenAddedToDeploymentPom
 	def test_twoMissingComponentsAreWrittenToArtifactXml(self):
 		self.assertEquals(WriteXmlFiles().writeArtifacts(['src/main/synapse-config/proxy-services/MyProxy.xml', 'src/main/synapse-config/tasks/MyTask.xml'], arfifactXmlPath, "1.0.0"), None)
 
-	def test_assertArtifactXml(self):
-		root = ET.parse(arfifactXmlPath)
-		self.assertEquals(root, True)
+	def test_assertArtifactXmllllll(self):
+		with open (arfifactXmlPath, "r") as myfile:
+			data = myfile.read().replace('\n', '')
+			
+		root = self.assertXmlDocument(data)
+
+		self.assertXpathValues(root, './artifact/file/text()', ('MyTask','MyApi'))
  
 if __name__ == '__main__':
 		unittest.main()
